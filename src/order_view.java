@@ -1,34 +1,68 @@
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.EventQueue;
 import java.awt.Font;
+import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
-import java.io.IOException;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.print.PrinterException;
+import java.awt.print.PrinterJob;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
-import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
+import javax.swing.plaf.basic.BasicInternalFrameTitlePane.IconifyAction;
+import javax.swing.table.DefaultTableModel;
 
-public class order_view extends JFrame {
+public class order_view extends JFrame implements ActionListener {
 
+	DataBaseConnection db = new DataBaseConnection();
+	Connection con;
+	Statement st;
+	PreparedStatement pst;
 	private JPanel contentPane;
+	private JPanel CPanel;
+	private JPanel IPanel;
+	private JLabel lblDate;
+	private JLabel lblLoginUsr;
+	public String img, lbl,itemName;
+	private String username;
+	private JTable orderViewTable = new JTable();
+	private JButton btnOrder, btnReset, btnRemove;
+	private DefaultTableModel model = (DefaultTableModel) orderViewTable.getModel();
+	ArrayList<OrderData> orderArrayList;
+	Object oData;
+	private JPanel panel_1;
+	private JPanel panel_2;
+	private JTextField TxtCharge;
+	private JTextField TxtTax;
 
-	/**
-	 * Launch the application.
-	 */
 	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
+		java.awt.EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					order_view frame = new order_view();
+					order_view frame = new order_view(null, null);
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -37,48 +71,76 @@ public class order_view extends JFrame {
 		});
 	}
 
-	private ImageIcon resizeImage(String imagePath, int width, int height) {
-		try {
-			Image img = ImageIO.read(new File(imagePath));
-			Image resizedImg = img.getScaledInstance(width, height, Image.SCALE_SMOOTH);
-			return new ImageIcon(resizedImg);
-		} catch (IOException ex) {
-			ex.printStackTrace();
-			return null; // Return null in case of an error
-		}
-	}
-
-	public order_view() {
+	public order_view(ArrayList<OrderData> orderList, String username) {
+		addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowActivated(WindowEvent e) {
+				refreshOrderTable();
+			}
+		});
+		orderArrayList = orderList;
+		this.username = username;
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-		setBounds(0, 0, screenSize.width, screenSize.height); // Set frame size dynamically
+		setBounds(0, 0, screenSize.width, screenSize.height);
+		setExtendedState(JFrame.MAXIMIZED_BOTH);
 		contentPane = new JPanel();
-		
+
 		contentPane.setBackground(new Color(255, 255, 255));
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 
+		JPanel order_Panel = new JPanel();
+		order_Panel.setBounds(997, 97, 525, 422);
+		order_Panel.setBackground(new Color(255, 204, 102));
+		contentPane.add(order_Panel);
+		order_Panel.setLayout(null);
+
+		// Table
+		JScrollPane scrollPane = new JScrollPane();
+		scrollPane.setBounds(0, 0, 525, 422); // Adjust the bounds
+		order_Panel.add(scrollPane);
+
+		lblLoginUsr = new JLabel("Welcome, " + username);
+		lblLoginUsr.setFont(new Font("Franklin Gothic Medium", Font.BOLD, 50));
+		lblLoginUsr.setBounds(38, 12, 400, 59); // Adjust the bounds as needed
+		contentPane.add(lblLoginUsr);
+
+		scrollPane.setViewportView(orderViewTable);
+		scrollPane.setPreferredSize(new Dimension(343, 452));
+		orderViewTable.setRowHeight(30);
+		orderViewTable.getTableHeader().setFont(new Font("Verdana", Font.BOLD, 20));
+		orderViewTable.setFont(new Font("UD Digi Kyokasho NK-B", Font.BOLD, 17));
+		model = new DefaultTableModel(new Object[][] {},
+				new String[] { "Name", "Cup-Size", "Sugar/Ice Level", "Toppings", "Quantity", "Total " });
+		orderViewTable.setModel(model);
+
 		JPanel panel = new JPanel();
+		panel.setBounds(0, 0, 1522, 87);
 		panel.setBackground(new Color(255, 153, 0));
-		panel.setBounds(0, 0, 1522, 87); // Adjusting width to fit screen
 		contentPane.add(panel);
 		panel.setLayout(null);
 
-		JLabel lblHeyU = new JLabel("HEY U ");
-		lblHeyU.setFont(new Font("Franklin Gothic Medium", Font.BOLD, 50));
-		lblHeyU.setBounds(39, 10, 174, 59);
-		panel.add(lblHeyU);
+		JLabel lblLoginUsr = new JLabel("");
+		lblLoginUsr.setFont(new Font("Franklin Gothic Medium", Font.BOLD, 50));
+		lblLoginUsr.setBounds(38, 12, 174, 59);
+		panel.add(lblLoginUsr);
 
-		JPanel panel_1 = new JPanel();
-		panel_1.setBackground(new Color(255, 204, 102));
-		panel_1.setBounds(10, 97, 227, 720);
-		contentPane.add(panel_1);
-		panel_1.setLayout(null);
+		lblDate = new JLabel();
+		lblDate.setFont(new Font("UD Digi Kyokasho NK-B", Font.BOLD, 25));
+		lblDate.setBounds(1198, 23, 174, 43);
+		panel.add(lblDate);
+
+		CPanel = new JPanel();
+		CPanel.setBounds(10, 97, 227, 720);
+		CPanel.setBackground(new Color(255, 204, 102));
+		contentPane.add(CPanel);
+		CPanel.setLayout(null);
 
 		JPanel panel_4 = new JPanel();
 		panel_4.setBounds(0, 0, 227, 79);
-		panel_1.add(panel_4);
+		CPanel.add(panel_4);
 		panel_4.setLayout(null);
 
 		JLabel lblNewLabel = new JLabel("Categories");
@@ -86,178 +148,365 @@ public class order_view extends JFrame {
 		lblNewLabel.setBounds(27, 10, 174, 59);
 		panel_4.add(lblNewLabel);
 
-		JButton sodaBtn = new JButton("Soda ");
-		sodaBtn.setBackground(new Color(255, 153, 0));
-		sodaBtn.setFont(new Font("UD Digi Kyokasho NK-B", Font.BOLD, 25));
-		sodaBtn.setBounds(0, 89, 227, 68);
-		panel_1.add(sodaBtn);
+		List<String> categories = fetchCategories();
 
-		JButton dodoBtn = new JButton("Do Do");
-		dodoBtn.setFont(new Font("UD Digi Kyokasho NK-B", Font.BOLD, 25));
-		dodoBtn.setBackground(new Color(255, 153, 0));
-		dodoBtn.setBounds(0, 167, 227, 68);
-		panel_1.add(dodoBtn);
+		int buttonY = 89; // Initial Y position for buttons
+		for (String category : categories) {
+			JButton categoryBtn = new JButton(category);
+			categoryBtn.setFont(new Font("UD Digi Kyokasho NK-B", Font.BOLD, 25));
+			categoryBtn.setBackground(new Color(255, 153, 0));
+			categoryBtn.setBounds(0, buttonY, 227, 68);
+			CPanel.add(categoryBtn);
 
-		JButton bubbleBtn = new JButton("Bubble Tea");
-		bubbleBtn.setFont(new Font("UD Digi Kyokasho NK-B", Font.BOLD, 25));
-		bubbleBtn.setBackground(new Color(255, 153, 0));
-		bubbleBtn.setBounds(0, 245, 227, 68);
-		panel_1.add(bubbleBtn);
+			// Adding action listener dynamically for each category button
+			categoryBtn.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					loadCategoryItems(category, IPanel, username);
+				}
+			});
 
-		JPanel panel_2 = new JPanel();
-		panel_2.setBackground(new Color(255, 204, 102));
-		panel_2.setBounds(247, 100, 740, 717);
+			buttonY += 78; // Increase Y position for the next button
+		}
+
+		IPanel = new JPanel();
+		IPanel.setBounds(247, 100, 740, 717);
+		IPanel.setBackground(new Color(255, 204, 102));
+		contentPane.add(IPanel);
+		IPanel.setLayout(new GridLayout(0, 2));
+
+		panel_1 = new JPanel();
+		panel_1.setBackground(new Color(255, 204, 102));
+		panel_1.setBounds(997, 689, 525, 93);
+		contentPane.add(panel_1);
+		panel_1.setLayout(null);
+
+		btnOrder = new JButton("Order");
+		btnOrder.setBounds(10, 10, 139, 73);
+		panel_1.add(btnOrder);
+		btnOrder.setBackground(new Color(255, 153, 0));
+		btnOrder.setFont(new Font("UD Digi Kyokasho NK-B", Font.BOLD, 30));
+
+		btnReset = new JButton("Reset");
+		btnReset.setBackground(new Color(255, 153, 0));
+		btnReset.setBounds(169, 10, 151, 73);
+		panel_1.add(btnReset);
+		btnReset.setFont(new Font("UD Digi Kyokasho NK-B", Font.BOLD, 30));
+
+		btnRemove = new JButton("Remove");
+		btnRemove.setBackground(new Color(255, 153, 0));
+		btnRemove.setBounds(342, 10, 173, 73);
+		panel_1.add(btnRemove);
+		btnRemove.setFont(new Font("UD Digi Kyokasho NK-B", Font.BOLD, 30));
+
+		panel_2 = new JPanel();
+		panel_2.setBackground(new Color(255, 153, 0));
+		panel_2.setBounds(997, 529, 525, 150);
 		contentPane.add(panel_2);
 		panel_2.setLayout(null);
 
-		JButton btn1 = new JButton("");
-		btn1.setBounds(24, 10, 177, 153);
-		panel_2.add(btn1);
+		JLabel lblNewLabel_1 = new JLabel("Charges  : ");
+		lblNewLabel_1.setFont(new Font("UD Digi Kyokasho NK-B", Font.BOLD, 25));
+		lblNewLabel_1.setBounds(69, 24, 170, 37);
+		panel_2.add(lblNewLabel_1);
 
-		JButton btn2 = new JButton("");
-		btn2.setBounds(285, 10, 177, 153);
-		panel_2.add(btn2);
+		JLabel lblNewLabel_1_1 = new JLabel("Taxes : ");
+		lblNewLabel_1_1.setFont(new Font("UD Digi Kyokasho NK-B", Font.BOLD, 25));
+		lblNewLabel_1_1.setBounds(112, 89, 120, 37);
+		panel_2.add(lblNewLabel_1_1);
 
-		JButton btn3 = new JButton("");
-		btn3.setBounds(541, 10, 177, 153);
-		panel_2.add(btn3);
+		TxtCharge = new JTextField();
+		TxtCharge.setFont(new Font("UD Digi Kyokasho NK-B", Font.BOLD, 25));
+		TxtCharge.setBounds(277, 24, 156, 37);
+		panel_2.add(TxtCharge);
+		TxtCharge.setColumns(10);
 
-		JButton btn4 = new JButton("");
-		btn4.setBounds(24, 252, 177, 153);
-		panel_2.add(btn4);
+		TxtTax = new JTextField();
+		TxtTax.setFont(new Font("UD Digi Kyokasho NK-B", Font.BOLD, 25));
+		TxtTax.setColumns(10);
+		TxtTax.setBounds(277, 89, 156, 37);
+		panel_2.add(TxtTax);
+		btnRemove.addActionListener(this);
+		btnReset.addActionListener(this);
 
-		JButton btn5 = new JButton("");
-		btn5.setBounds(285, 252, 177, 153);
-		panel_2.add(btn5);
+		btnOrder.addActionListener(this);
+		setCurrentDateTime();
 
-		JButton btn6 = new JButton("");
-		btn6.setBounds(541, 252, 177, 153);
-		panel_2.add(btn6);
+	}
 
-		JButton btn7 = new JButton("");
-		btn7.setBounds(24, 499, 177, 153);
-		panel_2.add(btn7);
+	private void refreshOrderTable() {
 
-		JButton btn8 = new JButton("");
-		btn8.setBounds(285, 499, 177, 153);
-		panel_2.add(btn8);
+		// Clear existing rows
+		model.setRowCount(0);
 
-		JButton btn9 = new JButton("");
-		btn9.setBounds(541, 499, 177, 153);
-		panel_2.add(btn9);
+		// Iterate through the list and add orders to the table
+		if (orderArrayList != null) {
+			for (OrderData order : orderArrayList) {
+				Object[] rowData = new Object[orderViewTable.getColumnCount()];
+				rowData[0] = order.getNameString();
+				rowData[1] = order.getSizeString();
+				rowData[2] = order.getSugarString() + "/" + order.getIceString();
+				rowData[3] = order.getToppingString();
+				rowData[4] = order.getQuantitiy();
+				rowData[5] = order.getTotal();
 
-		JPanel panel_3 = new JPanel();
-		panel_3.setBackground(new Color(255, 204, 102));
-		panel_3.setBounds(997, 97, 515, 720);
-		contentPane.add(panel_3);
-		panel_3.setLayout(null);
-		
-		JButton btnNewButton = new JButton("Order");
-		btnNewButton.setBackground(new Color(255, 153, 0));
-		btnNewButton.setFont(new Font("UD Digi Kyokasho NK-B", Font.BOLD, 33));
-		btnNewButton.setBounds(0, 624, 202, 68);
-		panel_3.add(btnNewButton);
-		
-		JButton btnCancel = new JButton("Cancel");
-		btnCancel.setBackground(new Color(255, 153, 0));
-		btnCancel.setFont(new Font("UD Digi Kyokasho NK-B", Font.BOLD, 30));
-		btnCancel.setBounds(313, 625, 202, 68);
-		panel_3.add(btnCancel);
+				model.addRow(rowData);
+			}
+		}
 
-		// For Soda button
-		sodaBtn.addActionListener(new ActionListener() {
+	}
 
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				btn1.setIcon(
-						new ImageIcon("C:\\Users\\Hsu\\eclipse-workspace\\JavaBasics\\images\\icons8-espresso-64.png"));
-				btn2.setIcon(
-						new ImageIcon("C:\\Users\\Hsu\\eclipse-workspace\\JavaBasics\\images\\icons8-espresso-64.png"));
-				btn3.setIcon(
-						new ImageIcon("C:\\Users\\Hsu\\eclipse-workspace\\JavaBasics\\images\\icons8-espresso-64.png"));
-				btn4.setIcon(
-						new ImageIcon("C:\\Users\\Hsu\\eclipse-workspace\\JavaBasics\\images\\icons8-espresso-64.png"));
-				btn5.setIcon(
-						new ImageIcon("C:\\Users\\Hsu\\eclipse-workspace\\JavaBasics\\images\\icons8-espresso-64.png"));
-				btn6.setIcon(
-						new ImageIcon("C:\\Users\\Hsu\\eclipse-workspace\\JavaBasics\\images\\icons8-espresso-64.png"));
-				btn7.setIcon(
-						new ImageIcon("C:\\Users\\Hsu\\eclipse-workspace\\JavaBasics\\images\\icons8-espresso-64.png"));
-				btn8.setIcon(
-						new ImageIcon("C:\\Users\\Hsu\\eclipse-workspace\\JavaBasics\\images\\icons8-espresso-64.png"));
-				btn9.setIcon(
-						new ImageIcon("C:\\Users\\Hsu\\eclipse-workspace\\JavaBasics\\images\\icons8-espresso-64.png"));
+	public Integer getPrice() {
+		int price = 0;
+		String query = "SELECT price FROM items WHERE name = ?";
+
+		try {
+			con = db.getConnect();
+			PreparedStatement ps = con.prepareStatement(query);
+			ps.setString(1,itemName);
+			ResultSet rs = ps.executeQuery();
+			if (rs.next()) {
+				price = rs.getInt("price");
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		return price;
+
+	}
+
+	private void setCurrentDateTime() {
+		// Get current date and time from the device's clock
+		LocalDateTime currentDateTime = LocalDateTime.now();
+
+		// Format date and time
+		DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+		DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+
+		String formattedDate = dateFormatter.format(currentDateTime);
+		String formattedTime = timeFormatter.format(currentDateTime);
+
+		lblDate.setText(formattedDate);
+	}
+
+	// Categories items fetch from database
+	private List<String> fetchCategories() {
+		List<String> categories = new ArrayList<>();
+		try {
+			Connection connection = new DataBaseConnection().getConnect();
+			String query = "SELECT DISTINCT category_name FROM items";
+			try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+				ResultSet resultSet = preparedStatement.executeQuery();
+				while (resultSet.next()) {
+					categories.add(resultSet.getString("category_name"));
+				}
+			}
+			connection.close();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return categories;
+	}
+
+	private void loadCategoryItems(String category, JPanel panel, String user) {
+
+		try {
+			Connection con = new DataBaseConnection().getConnect();
+			PreparedStatement pst = con.prepareStatement("select image, name from items where category_name = ?");
+			pst.setString(1, category);
+			ResultSet rs = pst.executeQuery();
+			IPanel.removeAll();
+			while (rs.next()) {
+				JButton button = new JButton();
+				JLabel b = new JLabel(rs.getString(2));
+				int newSize = 20;
+				Font labelFont = b.getFont();
+				b.setFont(new Font(labelFont.getFontName(), Font.BOLD, newSize));
+				JPanel p = new JPanel();
+				button.setIcon(resizeImage(rs.getString(1), 80, 80));
+				p.setBounds(10, 20, 20, 20);
+				p.setLayout(new GridLayout(3, 2));
+				p.add(button);
+				p.add(b);
+				IPanel.add(p);
+				String img1 = rs.getString(1);
+				itemName = rs.getString(2);
+				String itm = rs.getString(2);
+				button.addActionListener(new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						menuDetail menuDeatil = new menuDetail(img1, itm, getPrice(), orderArrayList, user);
+						menuDeatil.setVisible(true);
+						dispose();
+					}
+
+				});
+			}
+			IPanel.revalidate();
+			IPanel.repaint();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private ImageIcon resizeImage(String imagePath, int width, int height) {
+		try {
+			Image img = new ImageIcon(imagePath).getImage();
+			Image resizedImg = img.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+			return new ImageIcon(resizedImg);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			System.err.println("Error loading image: " + imagePath);
+			return null;
+		}
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+
+		if (e.getSource() == btnOrder) {
+
+			if (orderViewTable.getRowCount() == 0) {
+				JOptionPane.showMessageDialog(order_view.this, "Please add items to the order before proceeding.");
+				return; // Stop further processing
+			}
+			int option = JOptionPane.showConfirmDialog(order_view.this, "Are you sure to order ?", "Confirmation",
+					JOptionPane.YES_NO_OPTION);
+
+			if (option == JOptionPane.YES_OPTION) {
+
+				String query = "INSERT INTO orders (order_name, cup_size, suger_ice,toppings,quantity, total_amount, sale_date) VALUES (?, ?, ?, ?, ?, ?,CURDATE())";
+				int rowCount = orderViewTable.getRowCount();
+
+				try {
+					con = db.getConnect();
+					pst = con.prepareStatement(query);
+					int total = 0;
+					for (int j = 0; j < rowCount; j++) {
+						pst.setString(1, (String) model.getValueAt(j, 0));
+						pst.setString(2, (String) model.getValueAt(j, 1));
+						pst.setString(3, (String) model.getValueAt(j, 2));
+						pst.setString(4, (String) model.getValueAt(j, 3));
+						pst.setInt(5, (int) model.getValueAt(j, 4));
+						pst.setInt(6, (int) model.getValueAt(j, 5));
+						total += (int) model.getValueAt(j, 5);
+						pst.executeUpdate();
+					}
+
+				} catch (SQLException e1) {
+
+					e1.printStackTrace();
+				}
+
+				String voucherContent = generateVoucherContent();
+				Object[] options = { "OK", "Print" };
+				int selection = JOptionPane.showOptionDialog(order_view.this, voucherContent, "Order Voucher",
+						JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
+
+				if (selection == 1) {
+					JOptionPane.showMessageDialog(order_view.this, "Loading...");
+
+					PrinterJob job = PrinterJob.getPrinterJob();
+					if (job.printDialog()) {
+						try {
+							job.print();
+							JOptionPane.showMessageDialog(order_view.this, "Printing completed successfully!");
+						} catch (PrinterException er) {
+							er.printStackTrace();
+							JOptionPane.showMessageDialog(order_view.this, "Failed to print: " + er.getMessage());
+						}
+					} else {
+						JOptionPane.showMessageDialog(order_view.this, "Printing cancelled!!!");
+					}
+				}
 
 			}
-		});
+			// Clear the order table after the order is completed
+			clearOrderTable();
 
-		// For DoDo button
-		dodoBtn.addActionListener(new ActionListener() {
+			if (e.getSource() == btnReset) {
+				int delete = JOptionPane.showConfirmDialog(order_view.this, "Are you sure you want to reset all ?",
+						"Confirmation", JOptionPane.YES_NO_OPTION);
 
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				btn1.setIcon(
-						new ImageIcon("C:\\Users\\Hsu\\eclipse-workspace\\JavaBasics\\images\\icons8-latte-100.png"));
-				btn2.setIcon(
-						new ImageIcon("C:\\Users\\Hsu\\eclipse-workspace\\JavaBasics\\images\\icons8-latte-100.png"));
-				btn3.setIcon(
-						new ImageIcon("C:\\Users\\Hsu\\eclipse-workspace\\JavaBasics\\images\\icons8-latte-100.png"));
-				btn4.setIcon(
-						new ImageIcon("C:\\Users\\Hsu\\eclipse-workspace\\JavaBasics\\images\\icons8-latte-100.png"));
-				btn5.setIcon(
-						new ImageIcon("C:\\Users\\Hsu\\eclipse-workspace\\JavaBasics\\images\\icons8-latte-100.png"));
-				btn6.setIcon(
-						new ImageIcon("C:\\Users\\Hsu\\eclipse-workspace\\JavaBasics\\images\\icons8-latte-100.png"));
-				btn7.setIcon(
-						new ImageIcon("C:\\Users\\Hsu\\eclipse-workspace\\JavaBasics\\images\\icons8-latte-100.png"));
-				btn8.setIcon(
-						new ImageIcon("C:\\Users\\Hsu\\eclipse-workspace\\JavaBasics\\images\\icons8-latte-100.png"));
-				btn9.setIcon(
-						new ImageIcon("C:\\Users\\Hsu\\eclipse-workspace\\JavaBasics\\images\\icons8-latte-100.png"));
+				if (delete == JOptionPane.YES_OPTION) {
+					if (orderViewTable.getRowCount() > 0) {
+						// Clear all rows from the table model
+						model.setRowCount(0);
 
+						orderArrayList.clear();
+
+						JOptionPane.showMessageDialog(order_view.this, "All items reset successfully!");
+					} else {
+						JOptionPane.showMessageDialog(order_view.this, "There are no items to reset.");
+					}
+				}
 			}
-		});
+			if (e.getSource() == btnRemove) {
+				int selectedRow = orderViewTable.getSelectedRow();
 
-		// For milk tea button
-		bubbleBtn.addActionListener(new ActionListener() {
+				if (selectedRow != -1) {
+					model.removeRow(selectedRow);
 
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				int width = 100;
-				int height = 100;
-				btn1.setIcon(resizeImage("C:\\Users\\Hsu\\eclipse-workspace\\JavaProject\\prj_img\\brownsugar.jpg",
-						width, height));
-				btn2.setIcon(resizeImage("C:\\Users\\Hsu\\eclipse-workspace\\JavaProject\\prj_img\\caramel.jpg", width,
-						height));
-				btn3.setIcon(resizeImage(
-						"C:\\Users\\Hsu\\eclipse-workspace\\JavaProject\\prj_img\\Cold-Bubble-Tea-PNG-Photos.png",
-						width, height));
-				btn4.setIcon(
-						resizeImage("C:\\Users\\Hsu\\eclipse-workspace\\JavaProject\\prj_img\\freshmilkgreentea.png",
-								width, height));
-				btn5.setIcon(resizeImage("C:\\Users\\Hsu\\eclipse-workspace\\JavaProject\\prj_img\\brownsugar.jpg",
-						width, height));
-				btn6.setIcon(resizeImage("C:\\Users\\Hsu\\eclipse-workspace\\JavaProject\\prj_img\\caramel.jpg", width,
-						height));
-				btn7.setIcon(resizeImage("C:\\Users\\Hsu\\eclipse-workspace\\JavaProject\\prj_img\\brownsugar.jpg",
-						width, height));
-				btn8.setIcon(resizeImage("C:\\Users\\Hsu\\eclipse-workspace\\JavaProject\\prj_img\\caramel.jpg", width,
-						height));
-				btn9.setIcon(resizeImage("C:\\Users\\Hsu\\eclipse-workspace\\JavaProject\\prj_img\\brownsugar.jpg",
-						width, height));
+					if (orderArrayList != null && orderArrayList.size() > selectedRow) {
+						orderArrayList.remove(selectedRow);
+					}
 
+					JOptionPane.showMessageDialog(order_view.this, "Selected item removed successfully!");
+				} else {
+					JOptionPane.showMessageDialog(order_view.this, "Please select an item to remove.");
+				}
 			}
-		});
+		}
+	}
 
-		// action listener for each button
-		btn1.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {				
-				menuDetail menudata = new menuDetail();
-				menudata.setVisible(true);
+	private void clearOrderTable() {
+		// TODO Auto-generated method stub
+		model.setRowCount(0); // Clear all rows from the table model
+		orderArrayList.clear(); // Optionally, clear the orderArrayList as well
+	}
+
+	private String generateVoucherContent() {
+		StringBuilder voucherContent = new StringBuilder();
+
+		voucherContent.append("HEY U\n");
+		voucherContent.append("Bubble Tea And Snacks\n");
+		voucherContent.append("-----------------------------\n");
+		voucherContent.append("Username: ").append(orderArrayList.get(0).getUsername()).append("\n");
+		voucherContent.append("Date: ").append(lblDate.getText()).append("\n");
+		voucherContent.append("------------------------------\n");
+
+		if (orderArrayList != null && !orderArrayList.isEmpty()) {
+			for (OrderData order : orderArrayList) {
+
+				voucherContent.append("Item: ").append(order.getNameString()).append("\n");
+				voucherContent.append("Cup-Size: ").append(order.getSizeString()).append("\n");
+				voucherContent.append("Sugar/Ice Level: ").append(order.getSugarString()).append("/")
+						.append(order.getIceString()).append("\n");
+				voucherContent.append("Toppings: ").append(order.getToppingString()).append("\n");
+				voucherContent.append("Quantity: ").append(order.getQuantitiy()).append("\n");
+				voucherContent.append("Total: ").append(order.getTotal()).append("\n");
+				voucherContent.append("---------------------------\n");
 			}
-		});
-		
-		
+		}
+
+		// Add total amount
+		voucherContent.append("Total Amount: ").append(calculateTotalAmount()).append("\n");
+
+		return voucherContent.toString();
+	}
+
+	private int generateOrderId() {
+		int orderId = 1;
+		return orderId;
+	}
+
+	private int calculateTotalAmount() {
+		int total = 0;
+		for (OrderData order : orderArrayList) {
+			total += order.getTotal();
+		}
+		return total;
 	}
 }

@@ -1,0 +1,17 @@
+Order Voucher
+---------------------------
+Item: bubble tea
+Cup-Size: Small
+Sugar/Ice Level: No Sugar/Regular
+Toppings: Bubble | 
+Quantity: 1
+Total: 2700
+---------------------------
+Item: kiwi soda
+Cup-Size: Medium
+Sugar/Ice Level: 100%/More
+Toppings: Milk Form | Strawberry Pop Balls | 
+Quantity: 1
+Total: 3900
+---------------------------
+Total Amount: 6600

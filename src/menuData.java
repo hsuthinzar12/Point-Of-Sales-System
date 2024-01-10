@@ -38,16 +38,16 @@ public class menuData extends JFrame {
 
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
-		
+
 		JPanel menuTabs = new JPanel();
 		menuTabs.setBounds(127, 78, 215, 202);
 		contentPane.add(menuTabs);
 		menuTabs.setLayout(null);
-		
+
 		JButton menuBtn = new JButton("");
 		menuBtn.setBounds(10, 10, 195, 135);
 		menuTabs.add(menuBtn);
-		
+
 		JLabel menulbl = new JLabel("");
 		menulbl.setFont(new Font("UD Digi Kyokasho NK-B", Font.BOLD, 25));
 		menulbl.setBounds(10, 155, 195, 37);
