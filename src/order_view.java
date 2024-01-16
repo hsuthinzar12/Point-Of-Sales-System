@@ -46,7 +46,7 @@ public class order_view extends JFrame implements ActionListener {
 	private JPanel IPanel;
 	private JLabel lblDate;
 	private JLabel lblLoginUsr;
-	public String img, lbl,itemName;
+	public String img, lbl, itemName;
 	private String username;
 	private JTable orderViewTable = new JTable();
 	private JButton btnOrder, btnReset, btnRemove;
@@ -54,9 +54,6 @@ public class order_view extends JFrame implements ActionListener {
 	ArrayList<OrderData> orderArrayList;
 	Object oData;
 	private JPanel panel_1;
-	private JPanel panel_2;
-	private JTextField TxtCharge;
-	private JTextField TxtTax;
 
 	public static void main(String[] args) {
 		java.awt.EventQueue.invokeLater(new Runnable() {
@@ -92,14 +89,14 @@ public class order_view extends JFrame implements ActionListener {
 		contentPane.setLayout(null);
 
 		JPanel order_Panel = new JPanel();
-		order_Panel.setBounds(997, 97, 525, 422);
+		order_Panel.setBounds(997, 97, 525, 564);
 		order_Panel.setBackground(new Color(255, 204, 102));
 		contentPane.add(order_Panel);
 		order_Panel.setLayout(null);
 
 		// Table
 		JScrollPane scrollPane = new JScrollPane();
-		scrollPane.setBounds(0, 0, 525, 422); // Adjust the bounds
+		scrollPane.setBounds(0, 0, 525, 564); // Adjust the bounds
 		order_Panel.add(scrollPane);
 
 		lblLoginUsr = new JLabel("Welcome, " + username);
@@ -129,9 +126,26 @@ public class order_view extends JFrame implements ActionListener {
 
 		lblDate = new JLabel();
 		lblDate.setFont(new Font("UD Digi Kyokasho NK-B", Font.BOLD, 25));
-		lblDate.setBounds(1198, 23, 174, 43);
+		lblDate.setBounds(1008, 23, 174, 43);
 		panel.add(lblDate);
+		
+		JButton btnLogOut = new JButton("Log Out");
+		btnLogOut.setFont(new Font("UD Digi Kyokasho NK-B", Font.BOLD, 25));
+		btnLogOut.setBounds(1360, 23, 152, 43);
+		panel.add(btnLogOut);
 
+		btnLogOut.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				int result = JOptionPane.showConfirmDialog(order_view.this, "Are you sure you want to logout?",
+						"Logout", JOptionPane.YES_NO_OPTION);
+
+				if (result == JOptionPane.YES_OPTION) {
+					dispose();
+					login loginFrame = new login();
+					loginFrame.setVisible(true);
+				}
+			}
+		});	
 		CPanel = new JPanel();
 		CPanel.setBounds(10, 97, 227, 720);
 		CPanel.setBackground(new Color(255, 204, 102));
@@ -177,55 +191,27 @@ public class order_view extends JFrame implements ActionListener {
 
 		panel_1 = new JPanel();
 		panel_1.setBackground(new Color(255, 204, 102));
-		panel_1.setBounds(997, 689, 525, 93);
+		panel_1.setBounds(997, 671, 525, 111);
 		contentPane.add(panel_1);
 		panel_1.setLayout(null);
 
 		btnOrder = new JButton("Order");
-		btnOrder.setBounds(10, 10, 139, 73);
+		btnOrder.setBounds(10, 28, 139, 73);
 		panel_1.add(btnOrder);
 		btnOrder.setBackground(new Color(255, 153, 0));
 		btnOrder.setFont(new Font("UD Digi Kyokasho NK-B", Font.BOLD, 30));
 
 		btnReset = new JButton("Reset");
 		btnReset.setBackground(new Color(255, 153, 0));
-		btnReset.setBounds(169, 10, 151, 73);
+		btnReset.setBounds(169, 28, 151, 73);
 		panel_1.add(btnReset);
 		btnReset.setFont(new Font("UD Digi Kyokasho NK-B", Font.BOLD, 30));
 
 		btnRemove = new JButton("Remove");
 		btnRemove.setBackground(new Color(255, 153, 0));
-		btnRemove.setBounds(342, 10, 173, 73);
+		btnRemove.setBounds(342, 28, 173, 73);
 		panel_1.add(btnRemove);
 		btnRemove.setFont(new Font("UD Digi Kyokasho NK-B", Font.BOLD, 30));
-
-		panel_2 = new JPanel();
-		panel_2.setBackground(new Color(255, 153, 0));
-		panel_2.setBounds(997, 529, 525, 150);
-		contentPane.add(panel_2);
-		panel_2.setLayout(null);
-
-		JLabel lblNewLabel_1 = new JLabel("Charges  : ");
-		lblNewLabel_1.setFont(new Font("UD Digi Kyokasho NK-B", Font.BOLD, 25));
-		lblNewLabel_1.setBounds(69, 24, 170, 37);
-		panel_2.add(lblNewLabel_1);
-
-		JLabel lblNewLabel_1_1 = new JLabel("Taxes : ");
-		lblNewLabel_1_1.setFont(new Font("UD Digi Kyokasho NK-B", Font.BOLD, 25));
-		lblNewLabel_1_1.setBounds(112, 89, 120, 37);
-		panel_2.add(lblNewLabel_1_1);
-
-		TxtCharge = new JTextField();
-		TxtCharge.setFont(new Font("UD Digi Kyokasho NK-B", Font.BOLD, 25));
-		TxtCharge.setBounds(277, 24, 156, 37);
-		panel_2.add(TxtCharge);
-		TxtCharge.setColumns(10);
-
-		TxtTax = new JTextField();
-		TxtTax.setFont(new Font("UD Digi Kyokasho NK-B", Font.BOLD, 25));
-		TxtTax.setColumns(10);
-		TxtTax.setBounds(277, 89, 156, 37);
-		panel_2.add(TxtTax);
 		btnRemove.addActionListener(this);
 		btnReset.addActionListener(this);
 
@@ -263,7 +249,7 @@ public class order_view extends JFrame implements ActionListener {
 		try {
 			con = db.getConnect();
 			PreparedStatement ps = con.prepareStatement(query);
-			ps.setString(1,itemName);
+			ps.setString(1, itemName);
 			ResultSet rs = ps.executeQuery();
 			if (rs.next()) {
 				price = rs.getInt("price");
@@ -425,38 +411,32 @@ public class order_view extends JFrame implements ActionListener {
 			}
 			// Clear the order table after the order is completed
 			clearOrderTable();
+		}
 
-			if (e.getSource() == btnReset) {
-				int delete = JOptionPane.showConfirmDialog(order_view.this, "Are you sure you want to reset all ?",
-						"Confirmation", JOptionPane.YES_NO_OPTION);
+		else if (e.getSource() == btnReset) {
+			int delete = JOptionPane.showConfirmDialog(order_view.this, "Are you sure you want to reset all ?",
+					"Confirmation", JOptionPane.YES_NO_OPTION);
+			if (delete == JOptionPane.YES_OPTION) {
+				if (orderViewTable.getRowCount() > 0) {
+					// Clear all rows from the table model
+					model.setRowCount(0);
+					orderArrayList.clear();
 
-				if (delete == JOptionPane.YES_OPTION) {
-					if (orderViewTable.getRowCount() > 0) {
-						// Clear all rows from the table model
-						model.setRowCount(0);
-
-						orderArrayList.clear();
-
-						JOptionPane.showMessageDialog(order_view.this, "All items reset successfully!");
-					} else {
-						JOptionPane.showMessageDialog(order_view.this, "There are no items to reset.");
-					}
+					JOptionPane.showMessageDialog(order_view.this, "All items reset successfully!");
+				} else {
+					JOptionPane.showMessageDialog(order_view.this, "There are no items to reset.");
 				}
 			}
-			if (e.getSource() == btnRemove) {
-				int selectedRow = orderViewTable.getSelectedRow();
-
-				if (selectedRow != -1) {
-					model.removeRow(selectedRow);
-
-					if (orderArrayList != null && orderArrayList.size() > selectedRow) {
-						orderArrayList.remove(selectedRow);
-					}
-
-					JOptionPane.showMessageDialog(order_view.this, "Selected item removed successfully!");
-				} else {
-					JOptionPane.showMessageDialog(order_view.this, "Please select an item to remove.");
+		} else if (e.getSource() == btnRemove) {
+			int selectedRow = orderViewTable.getSelectedRow();
+			if (selectedRow != -1) {
+				model.removeRow(selectedRow);
+				if (orderArrayList != null && orderArrayList.size() > selectedRow) {
+					orderArrayList.remove(selectedRow);
 				}
+				JOptionPane.showMessageDialog(order_view.this, "Selected item removed successfully!");
+			} else {
+				JOptionPane.showMessageDialog(order_view.this, "Please select an item to remove.");
 			}
 		}
 	}

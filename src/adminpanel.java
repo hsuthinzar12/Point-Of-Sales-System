@@ -42,20 +42,27 @@ public class adminpanel extends JFrame {
 	private static final String JDBC_USER = "root";
 	private static final String JDBC_PASSWORD = "root";
 	String currentButton = "";
-
+	public JScrollPane scrollPane;
+	
 	private void handleSidebarButtonClick(String buttonClicked) {
 		switch (buttonClicked) {
 		case "Menu":
 			refreshItemList();
+			scrollPane.setViewportView(itemTable);
 			break;
 		case "Orders":
 			refreshOrdersList();
+			
 			break;
 		case "Staffs":
 			refreshStaffList();
+			scrollPane.setViewportView(null);
+			scrollPane.setViewportView(userTable);
 			break;
 		case "Admin":
 			refreshAdmList();
+			scrollPane.setViewportView(null);
+			scrollPane.setViewportView(userTable);
 			break;
 		case "Today's Income":
 			refreshTodayIncomeList();
@@ -123,27 +130,25 @@ public class adminpanel extends JFrame {
 		return totalIncome;
 	}
 
-	private void editItemFromTable() {
-		int selectedRow = itemTable.getSelectedRow();
-		if (selectedRow == -1) {
-			JOptionPane.showMessageDialog(null, "Please select an item to edit.");
-			return;
-		}
-
-		int itemId = (int) itemTable.getValueAt(selectedRow, 0);
-		String itemCategory = (String) itemTable.getValueAt(selectedRow, 5);
-		String itemName = (String) itemTable.getValueAt(selectedRow, 1);
-		double itemPrice = (double) itemTable.getValueAt(selectedRow, 2);
-		int itemQuantity = (int) itemTable.getValueAt(selectedRow, 3);
-		String itemImage = (String) itemTable.getValueAt(selectedRow, 4);
-
-		EditItemDialog editItemDialog = new EditItemDialog(itemId, itemCategory, itemName, itemPrice, itemQuantity,
-				itemImage);
-		editItemDialog.setVisible(true);
-
-		// Refresh the item list after editing
-		refreshItemList();
-	}
+	/*
+	 * private void editItemFromTable() { int selectedRow =
+	 * itemTable.getSelectedRow(); //System.out.println(selectedRow); if
+	 * (selectedRow == -1) { JOptionPane.showMessageDialog(null,
+	 * "Please select an item to edit."); return; }
+	 * 
+	 * int itemId = (int) itemTable.getValueAt(selectedRow, 0); String itemCategory
+	 * = (String) itemTable.getValueAt(selectedRow, 5); String itemName = (String)
+	 * itemTable.getValueAt(selectedRow, 1); double itemPrice = (double)
+	 * itemTable.getValueAt(selectedRow, 2); int itemQuantity = (int)
+	 * itemTable.getValueAt(selectedRow, 3); String itemImage = (String)
+	 * itemTable.getValueAt(selectedRow, 4);
+	 * 
+	 * EditItemDialog editItemDialog = new EditItemDialog(itemId, itemCategory,
+	 * itemName, itemPrice, itemQuantity, itemImage);
+	 * editItemDialog.setVisible(true);
+	 * 
+	 * // Refresh the item list after editing refreshItemList(); }
+	 */
 
 	private class EditItemDialog extends JDialog {
 
@@ -265,27 +270,7 @@ public class adminpanel extends JFrame {
 		}
 	}
 
-	private void editUserFromTable() {
-		int selectedRow = userTable.getSelectedRow();
-		if (selectedRow == -1) {
-			JOptionPane.showMessageDialog(null, "Please select a user to edit.");
-			return;
-		}
-
-		int userId = (int) userTable.getValueAt(selectedRow, 0); // Assuming user ID is in column 0
-		String userName = (String) userTable.getValueAt(selectedRow, 1);
-		String userRole = (String) userTable.getValueAt(selectedRow, 2);
-
-		EditUserDialog editUserDialog = new EditUserDialog(userId, userName, userRole);
-		editUserDialog.setVisible(true);
-
-		// Refresh the user list after editing
-		refreshStaffList();
-		refreshAdmList();
-	}
-
 	private class EditUserDialog extends JDialog {
-		// Similar structure to EditItemDialog with fields for editing user information
 
 		private JTextField userNameField;
 		private JTextField userRoleField;
@@ -293,6 +278,7 @@ public class adminpanel extends JFrame {
 		private int userId;
 
 		public EditUserDialog(int userId, String userName, String userRole) {
+
 			this.userId = userId;
 			setTitle("Edit User");
 			setSize(400, 150);
@@ -338,13 +324,14 @@ public class adminpanel extends JFrame {
 					int rowsAffected = preparedStatement.executeUpdate();
 
 					if (rowsAffected > 0) {
-						JOptionPane.showMessageDialog(null, "User updated successfully!");
+						JOptionPane.showMessageDialog(null, "User added successfully!");
 						dispose();
+						// Move these lines here after successful update
+						refreshAdmList();
+						refreshStaffList();
 					} else {
 						JOptionPane.showMessageDialog(null, "Failed to update user. User not found.");
 					}
-					refreshAdmList();
-					refreshStaffList();
 				}
 
 				connection.close();
@@ -507,17 +494,18 @@ public class adminpanel extends JFrame {
 		contentPane.setLayout(null);
 
 		JPanel sidebar = new JPanel();
-		sidebar.setBounds(0, 50, 200, 400);
+		sidebar.setBounds(0, 50, 200, 444);
 		sidebar.setBackground(new Color(51, 51, 51));
 		contentPane.add(sidebar);
-		sidebar.setLayout(new GridLayout(6, 1));
+		sidebar.setLayout(new GridLayout(5, 1));
 
 		// Create sidebar buttons
 		JButton btnadmMenu = createSidebarButton("Menu");
 		sidebar.add(btnadmMenu);
 
-		JButton btnadmOrd = createSidebarButton("Orders");
-		sidebar.add(btnadmOrd);
+		/*
+		 * JButton btnadmOrd = createSidebarButton("Orders"); sidebar.add(btnadmOrd);
+		 */
 
 		JButton btnadmStf = createSidebarButton("Staffs");
 		sidebar.add(btnadmStf);
@@ -533,21 +521,26 @@ public class adminpanel extends JFrame {
 
 		JPanel panel = new JPanel();
 		panel.setBackground(new Color(255, 153, 0));
-		panel.setBounds(200, 0, 1340, 50);
+		panel.setBounds(772, 0, 768, 50);
 		contentPane.add(panel);
 		panel.setLayout(null);
 
 		// Adding a logout button
 		JButton btnLogout = new JButton("Logout");
-		btnLogout.setBounds(1172, 0, 168, 50);
+		btnLogout.setBounds(599, 0, 168, 50);
 		panel.add(btnLogout);
 		btnLogout.setFont(new Font("UD Digi Kyokasho NK-B", Font.BOLD, 25));
 
 		btnLogout.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				dispose();
-				login loginFrame = new login();
-				loginFrame.setVisible(true);
+				int result = JOptionPane.showConfirmDialog(adminpanel.this, "Are you sure you want to logout?",
+						"Logout", JOptionPane.YES_NO_OPTION);
+
+				if (result == JOptionPane.YES_OPTION) {
+					dispose();
+					login loginFrame = new login();
+					loginFrame.setVisible(true);
+				}
 			}
 		});
 
@@ -562,7 +555,7 @@ public class adminpanel extends JFrame {
 		JTableHeader tableHeader = itemTable.getTableHeader();
 		tableHeader.setFont(new Font("UD Digi Kyokasho NK-B", Font.BOLD, 16));
 
-		JScrollPane scrollPane = new JScrollPane(itemTable);
+		scrollPane = new JScrollPane(itemTable);
 		scrollPane.setBounds(200, 50, 1347, 600);
 		contentPane.add(scrollPane);
 
@@ -577,9 +570,6 @@ public class adminpanel extends JFrame {
 		JTableHeader tH = userTable.getTableHeader();
 		tH.setFont(new Font("UD Digi Kyokasho NK-B", Font.BOLD, 16));
 
-		JScrollPane scrollP = new JScrollPane(userTable);
-		scrollP.setBounds(200, 50, 1347, 600);
-		contentPane.add(scrollP);
 
 		serctxtarea = new JTextField();
 		serctxtarea.setBounds(200, 10, 400, 30);
@@ -635,9 +625,9 @@ public class adminpanel extends JFrame {
 		btnadmAdm.addActionListener(e -> {
 			currentButton = "Admin";
 		});
-		btnadmOrd.addActionListener(e -> {
-			currentButton = "Orders";
-		});
+		/*
+		 * btnadmOrd.addActionListener(e -> { currentButton = "Orders"; });
+		 */
 		btntdyIncome.addActionListener(e -> {
 			currentButton = "Today";
 		});
@@ -670,10 +660,28 @@ public class adminpanel extends JFrame {
 				deleteAdmin();
 			}
 		});
-		sercbtn.addActionListener(e -> searchItem());
+		// sercbtn.addActionListener(e -> searchItem());
+		serctxtarea.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				searchItem();
+			}
+		});
+
+		/*
+		 * sercbtn.addActionListener(new ActionListener() {
+		 * 
+		 * @Override public void actionPerformed(ActionEvent e) { searchItem(); } });
+		 */
+		sercbtn.addActionListener(e -> {
+			if (currentButton.equals("Menu")) {
+				searchItem();
+			} else if (currentButton.equals("Staffs")) {
+				/* searchStaff(null, JDBC_PASSWORD, null); */
+			}
+		});
 
 		btnadmMenu.addActionListener(e -> adminpanel.this.handleSidebarButtonClick("Menu"));
-		btnadmOrd.addActionListener(e -> adminpanel.this.handleSidebarButtonClick("Orders"));
 		btnadmStf.addActionListener(e -> adminpanel.this.handleSidebarButtonClick("Staffs"));
 		btnadmAdm.addActionListener(e -> adminpanel.this.handleSidebarButtonClick("Admin"));
 		btntdyIncome.addActionListener(e -> adminpanel.this.handleSidebarButtonClick("Today's Income"));
@@ -829,22 +837,24 @@ public class adminpanel extends JFrame {
 	// Edit items
 	private void editItem() {
 		int selectedRow = itemTable.getSelectedRow();
-
+		System.out.println(selectedRow);
 		if (selectedRow == -1) {
 			JOptionPane.showMessageDialog(null, "Please select an item to edit.");
 			return;
 		}
 
-		String[] columnNames = { "ID", "Category", "Name", "Price", "Quantity" };
+		String[] columnNames = { "ID", "Category", "Name", "Price", "Quantity", "Image" };
 
 		// Retrieve data from the selected row
 		String name = (String) itemTable.getValueAt(selectedRow, 3);
 		String category = String.valueOf(itemTable.getValueAt(selectedRow, 2));
 		double price = 0;
 		int quantity = 0;
+		int id = 0;
 
 		// Handling data type conversion from Double to String for category
 		try {
+			id = Integer.parseInt(itemTable.getValueAt(selectedRow, 1).toString());
 			price = Double.parseDouble(itemTable.getValueAt(selectedRow, 4).toString());
 			quantity = Integer.parseInt(itemTable.getValueAt(selectedRow, 5).toString());
 
@@ -869,7 +879,7 @@ public class adminpanel extends JFrame {
 			if (result == JFileChooser.APPROVE_OPTION) {
 
 				File selectedFile = fileChooser.getSelectedFile();
-				String imagePath = selectedFile.getAbsolutePath();
+				String imagePath = selectedFile.getPath();
 				imageLabel.setText(imagePath);
 
 			}
@@ -901,7 +911,7 @@ public class adminpanel extends JFrame {
 					preparedStatement.setDouble(3, Double.parseDouble(priceField.getText()));
 					preparedStatement.setInt(4, Integer.parseInt(quantityField.getText()));
 					preparedStatement.setString(5, imageLabel.getText());
-					preparedStatement.setInt(6, Integer.parseInt(itemTable.getValueAt(selectedRow, 0).toString()));
+					preparedStatement.setInt(6, id);
 
 					int rowsAffected = preparedStatement.executeUpdate();
 
@@ -924,15 +934,16 @@ public class adminpanel extends JFrame {
 	private void editUser() {
 		int selectedRow = userTable.getSelectedRow();
 
+		System.out.println(selectedRow);
 		if (selectedRow == -1) {
 			JOptionPane.showMessageDialog(null, "Please select a user to edit.");
 			return;
 		}
-
 		// Retrieve data from the selected row
-		String username = (String) userTable.getValueAt(selectedRow, 1);
-		String password = ""; // Assuming you're not displaying passwords in the table
-		String role = (String) userTable.getValueAt(selectedRow, 2);
+		int ID =(int) userTable.getValueAt(selectedRow, 1);
+		String username = (String) userTable.getValueAt(selectedRow, 2);
+		String password = "";
+		String role = (String) userTable.getValueAt(selectedRow, 4);
 
 		// text fields for editing
 		JPanel editPanel = new JPanel(new GridLayout(3, 2));
@@ -956,17 +967,17 @@ public class adminpanel extends JFrame {
 
 				String query = "UPDATE users SET username=?, password=?, role=? WHERE id=?";
 				try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-					preparedStatement.setString(1, usernameField.getText());
-					preparedStatement.setString(2, new String(passwordField.getPassword())); // Get password from field
+					preparedStatement.setString(1,new String( usernameField.getText()));
+					preparedStatement.setString(2, new String(passwordField.getPassword()));
 					preparedStatement.setString(3, roleField.getText());
-					preparedStatement.setInt(4, Integer.parseInt(userTable.getValueAt(selectedRow, 0).toString()));
+					preparedStatement.setInt(4, ID);
 
 					int rowsAffected = preparedStatement.executeUpdate();
 
 					if (rowsAffected > 0) {
 						JOptionPane.showMessageDialog(null, "User updated successfully!");
 						refreshStaffList();
-						refreshAdmList();// Refresh the user list
+						refreshAdmList(); // Refresh the user list
 					} else {
 						JOptionPane.showMessageDialog(null, "Failed to update user. User not found.");
 					}
@@ -1130,7 +1141,6 @@ public class adminpanel extends JFrame {
 				}
 			}
 		} catch (Exception ex) {
-			ex.printStackTrace();
 		}
 	}
 
@@ -1190,7 +1200,7 @@ public class adminpanel extends JFrame {
 					model.addRow(row);
 				}
 
-				itemTable.setModel(model);
+				userTable.setModel(model);
 			}
 
 			connection.close();
@@ -1249,7 +1259,7 @@ public class adminpanel extends JFrame {
 					model.addRow(row);
 				}
 
-				itemTable.setModel(model);
+				userTable.setModel(model);
 			}
 
 			connection.close();
@@ -1294,70 +1304,101 @@ public class adminpanel extends JFrame {
 		try {
 			Connection connection = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
 
-			// Retrieve data from UI components
 			String searchTerm = serctxtarea.getText();
 
-			// Search for items and staff in the database
-			String itemQuery = "SELECT * FROM items WHERE name LIKE ?";
-			String staffQuery = "SELECT * FROM users WHERE role='user' AND username LIKE ?";
-			String admQuery = "SELECT * FROM users WHERE role='admin' AND username LIKE ?";
-			DefaultTableModel model = createTableModel();
-
-			try (PreparedStatement itemStatement = connection.prepareStatement(itemQuery);
-					PreparedStatement staffStatement = connection.prepareStatement(staffQuery);
-					PreparedStatement adminStatement = connection.prepareStatement(admQuery);) {
+			if (searchTerm.isEmpty()) {
+				// clearTable();
+			} else {
+				DefaultTableModel model;
 
 				// Search for items
-				itemStatement.setString(1, "%" + searchTerm + "%");
-				try (ResultSet itemResultSet = itemStatement.executeQuery()) {
-					while (itemResultSet.next()) {
-						Vector<Object> row = new Vector<>();
-						row.add(false); // Initial value for the selection column
-						row.add(itemResultSet.getInt("id"));
-						row.add(itemResultSet.getString("name"));
-						row.add(itemResultSet.getDouble("price"));
-						row.add(itemResultSet.getInt("quantity"));
-						model.addRow(row);
-					}
+				if (isAdmin(searchTerm)) {
+					model = createAdminTableModel();
+					searchAdmin(connection, searchTerm, model);
+				} else if (isStaff(searchTerm)) {
+					model = createStaffTableModel();
+					searchStaff(connection, searchTerm, model);
+				} else {
+					model = createTableModel();
+					searchItems(connection, searchTerm, model);
 				}
 
-				// Search for staff
-				staffStatement.setString(1, "%" + searchTerm + "%");
-				try (ResultSet staffResultSet = staffStatement.executeQuery()) {
-					while (staffResultSet.next()) {
-						Vector<Object> row = new Vector<>();
-						row.add(false); // Initial value for the selection column
-						row.add(staffResultSet.getInt("id"));
-						row.add(staffResultSet.getString("username"));
-						row.add(staffResultSet.getString("password"));
-						row.add(staffResultSet.getString("role"));
-						model.addRow(row);
-					}
-				}
-
-				// Search for admin
-				adminStatement.setString(1, "%" + searchTerm + "%");
-				try (ResultSet admResultSet = adminStatement.executeQuery()) {
-					while (admResultSet.next()) {
-						Vector<Object> row = new Vector<>();
-						row.add(false); // Initial value for the selection column
-						row.add(admResultSet.getInt("id"));
-						row.add(admResultSet.getString("username"));
-						row.add(admResultSet.getString("password"));
-						row.add(admResultSet.getString("role"));
-						model.addRow(row);
-					}
-				}
-
-				// Search for orders
+				itemTable.setModel(model);
 			}
-
-			// Set the updated model to the itemTable
-			itemTable.setModel(model);
 
 			connection.close();
 		} catch (Exception ex) {
 			ex.printStackTrace();
+		}
+	}
+
+	private boolean isAdmin(String searchTerm) {
+		return searchTerm.contains("admin");
+	}
+
+	private boolean isStaff(String searchTerm) {
+		return searchTerm.contains("staff");
+	}
+
+	private void searchItems(Connection connection, String searchTerm, DefaultTableModel model) throws SQLException {
+		String itemQuery = "SELECT * FROM items WHERE id LIKE ? OR category_name LIKE ? OR name LIKE ?";
+		try (PreparedStatement itemStatement = connection.prepareStatement(itemQuery)) {
+			itemStatement.setString(1, "%" + searchTerm + "%");
+			itemStatement.setString(2, "%" + searchTerm + "%");
+			itemStatement.setString(3, "%" + searchTerm + "%");
+
+			try (ResultSet itemResultSet = itemStatement.executeQuery()) {
+				while (itemResultSet.next()) {
+					Vector<Object> row = new Vector<>();
+					row.add(false);
+					row.add(itemResultSet.getInt("id"));
+					row.add(itemResultSet.getString("category_name"));
+					row.add(itemResultSet.getString("name"));
+					row.add(itemResultSet.getDouble("price"));
+					row.add(itemResultSet.getInt("quantity"));
+					model.addRow(row);
+				}
+			}
+		}
+	}
+
+	private void searchStaff(Connection connection, String searchTerm, DefaultTableModel model) throws SQLException {
+		String staffQuery = "SELECT id, username AS name, password, role FROM users WHERE role='user' AND (id LIKE ? OR username LIKE ?)";
+		try (PreparedStatement staffStatement = connection.prepareStatement(staffQuery)) {
+			staffStatement.setString(1, "%" + searchTerm + "%");
+			staffStatement.setString(2, "%" + searchTerm + "%");
+
+			try (ResultSet staffResultSet = staffStatement.executeQuery()) {
+				while (staffResultSet.next()) {
+					Vector<Object> row = new Vector<>();
+					row.add(false);
+					row.add(staffResultSet.getInt("id"));
+					row.add(staffResultSet.getString("name"));
+					row.add(staffResultSet.getString("password"));
+					row.add(staffResultSet.getString("role"));
+					model.addRow(row);
+				}
+			}
+		}
+	}
+
+	private void searchAdmin(Connection connection, String searchTerm, DefaultTableModel model) throws SQLException {
+		String admQuery = "SELECT id, username AS name, password, role FROM users WHERE role='admin' AND (id LIKE ? OR username LIKE ?)";
+		try (PreparedStatement adminStatement = connection.prepareStatement(admQuery)) {
+			adminStatement.setString(1, "%" + searchTerm + "%");
+			adminStatement.setString(2, "%" + searchTerm + "%");
+
+			try (ResultSet admResultSet = adminStatement.executeQuery()) {
+				while (admResultSet.next()) {
+					Vector<Object> row = new Vector<>();
+					row.add(false);
+					row.add(admResultSet.getInt("id"));
+					row.add(admResultSet.getString("name"));
+					row.add(admResultSet.getString("password"));
+					row.add(admResultSet.getString("role"));
+					model.addRow(row);
+				}
+			}
 		}
 	}
 

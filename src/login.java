@@ -40,7 +40,8 @@ public class login extends JFrame {
 	private JRadioButton adminRadioButton;
 
 	public login() {
-		setTitle("Login Form");
+		setIconImage(Toolkit.getDefaultToolkit().getImage("C:\\Users\\Hsu\\eclipse-workspace\\BubbleTeaShopPOS\\prj_img\\CatLogo.png"));
+		setTitle("Hey U");
 		setSize(1430, 841);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setLocationRelativeTo(null);
@@ -59,24 +60,8 @@ public class login extends JFrame {
 		panel.setBackground(new Color(255, 153, 0));
 		panel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
 		ButtonGroup roleGroup = new ButtonGroup();
-		JButton addUserButton = new JButton("Add User"); // New button for admin to add users
 		resultLabel = new JLabel();
 
-		addUserButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// Check if the current user is an admin
-				String username = usernameTextField.getText();
-				String password = new String(passwordField.getPassword());
-				if (authenticateUser(username, password) && "admin".equals(getUserRole(username))) {
-					// Admin authenticated successfully, show the add user dialog
-					showAddUserDialog();
-				} else {
-					// User is not an admin
-					resultLabel.setText("Only admin can add users.");
-				}
-			}
-		});
 		panel.setLayout(null);
 
 		getContentPane().add(panel, BorderLayout.CENTER);
@@ -158,7 +143,7 @@ public class login extends JFrame {
 					loadingDialog.setUndecorated(true);
 					JLabel loadingLabel = new JLabel("Loading...");
 					loadingLabel.setHorizontalAlignment(SwingConstants.CENTER);
-					loadingDialog.add(loadingLabel);
+					loadingDialog.getContentPane().add(loadingLabel);
 					loadingDialog.setSize(200, 100);
 					loadingDialog.setLocationRelativeTo(null);
 					loadingDialog.setVisible(true);
@@ -187,11 +172,11 @@ public class login extends JFrame {
 
 					if ("user".equals(role)) {
 						// User authenticated successfully, redirect to order_view
-						dispose(); // Close the current login window
+						dispose();
 						new order_view(null, username).setVisible(true);
 					} else if ("admin".equals(role)) {
 						// Admin authenticated successfully, redirect to adminpanel
-						dispose(); // Close the current login window
+						dispose();
 						new adminpanel().setVisible(true);
 						JOptionPane.showMessageDialog(null, "Welcome " + username);
 					} else {
@@ -207,35 +192,6 @@ public class login extends JFrame {
 		getContentPane().add(resultLabel, BorderLayout.SOUTH);
 	}
 
-	private void showAddUserDialog() {
-		JTextField newUserField = new JTextField();
-		JPasswordField newPasswordField = new JPasswordField();
-
-		JPanel myPanel = new JPanel();
-		myPanel.setLayout(new GridLayout(3, 2));
-		myPanel.add(new JLabel("New User Name:"));
-		myPanel.add(newUserField);
-		myPanel.add(new JLabel("New Password:"));
-		myPanel.add(newPasswordField);
-
-		// Change this line to create the dialog with 'this' as the parent frame
-		JOptionPane.showMessageDialog(this, myPanel, "Enter new user details", JOptionPane.OK_CANCEL_OPTION);
-
-		int result = JOptionPane.showConfirmDialog(null, myPanel, "Enter new user details",
-				JOptionPane.OK_CANCEL_OPTION);
-
-		if (result == JOptionPane.OK_OPTION) {
-			String newUsername = newUserField.getText();
-			String newPassword = new String(newPasswordField.getPassword());
-
-			// Register the new user
-			if (registerUser(newUsername, newPassword, "user")) {
-				resultLabel.setText("User added successfully!");
-			} else {
-				resultLabel.setText("Failed to add user. Please check your input.");
-			}
-		}
-	}
 
 	private static boolean authenticateUser(String username, String password) {
 		// Check if the username or password is empty
@@ -296,35 +252,6 @@ public class login extends JFrame {
 		}
 
 		return null;
-	}
-
-	private static boolean registerUser(String username, String password, String role) {
-		// Check if the username or password is empty
-		if (username.isEmpty() || password.isEmpty()) {
-			return false; // Return false if the fields are empty
-		}
-
-		try {
-			Connection connection = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
-
-			String query = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
-			PreparedStatement preparedStatement = connection.prepareStatement(query);
-			preparedStatement.setString(1, username);
-			preparedStatement.setString(2, password);
-			preparedStatement.setString(3, role);
-
-			int rowsAffected = preparedStatement.executeUpdate();
-
-			preparedStatement.close();
-			connection.close();
-
-			return rowsAffected > 0;
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return false;
 	}
 
 	public static void main(String[] args) {
